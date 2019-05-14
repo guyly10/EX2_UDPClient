@@ -52,6 +52,7 @@ int main(int argc, char* argv[])
 	char sendBuff[255];
 	char recvBuff[255];
 	bool flag = true;
+	int count = 0;
 
 	cout << "Please choose one of the following commands: GETAll--GET--PUT.\n";
 	cin >> sendBuff;
@@ -64,32 +65,41 @@ int main(int argc, char* argv[])
 	// NOTE: the last argument should always be the actual size of the client's data-structure (i.e. sizeof(sockaddr)).
 	bytesSent = sendto(connSocket, sendBuff, (int)strlen(sendBuff), 0, (const sockaddr*)& server, sizeof(server));
 
-	while (flag) 
+	if (SOCKET_ERROR == bytesSent)
 	{
-		
-		if (SOCKET_ERROR == bytesSent)
-		{
-			cout << "Time Client: Error at sendto(): " << WSAGetLastError() << endl;
-			closesocket(connSocket);
-			WSACleanup();
-			return(-1);
-		}
+		cout << "Time Client: Error at sendto(): " << WSAGetLastError() << endl;
+		closesocket(connSocket);
+		WSACleanup();
+		return(-1);
+	}
 
-		//cout << "Time Client: Sent: " << bytesSent << "/" << strlen(sendBuff) << " bytes of \"" << sendBuff << "\" message.\n";
+	//cout << "Time Client: Sent: " << bytesSent << "/" << strlen(sendBuff) << " bytes of \"" << sendBuff << "\" message.\n";
 
-		// Gets the server's answer using simple recieve (no need to hold the server's address).
-		bytesRecv = recv(connSocket, recvBuff, 255, 0);
+	// Gets the server's answer using simple recieve (no need to hold the server's address).
+	
+	while (bytesRecv = recv(connSocket, recvBuff, 255, 0) > 0)
+	{		
 		if (SOCKET_ERROR == bytesRecv)
 		{
 			cout << "Time Client: Error at recv(): " << WSAGetLastError() << endl;
 			closesocket(connSocket);
 			WSACleanup();
 			return(-1);
+		}	
+		
+		for (int i = 0; i < 255; i++)
+		{
+			if (recvBuff[i] >= 'A' && recvBuff[i] <= 'Z' || recvBuff[i] >= 'a' && recvBuff[i] <= 'z')
+			{
+				count++;
+			}
 		}
 
-		recvBuff[bytesRecv] = '\0'; //add the null-terminating to make it a string
+		recvBuff[count] = '\0'; //add the null-terminating to make it a string
 		cout << "Time Client: Recieved: " << bytesRecv << " bytes of \"" << recvBuff << "\" message.\n";
-	}		
+		count = 0;
+	}	
+
 
 	// Closing connections and Winsock.
 	cout << "Time Client: Closing Connection.\n";
