@@ -56,15 +56,17 @@ int main(int argc, char* argv[])
 	cout << "Please choose one of the following commands: GETAll--GET--PUT.\n";
 	cin >> sendBuff;
 
-	while (flag) {
+	// Asks the server what's the currnet time.
+	// The send function sends data on a connected socket.
+	// The buffer to be sent and its size are needed.
+	// The fourth argument is an idicator specifying the way in which the call is made (0 for default).
+	// The two last arguments hold the details of the server to communicate with. 
+	// NOTE: the last argument should always be the actual size of the client's data-structure (i.e. sizeof(sockaddr)).
+	bytesSent = sendto(connSocket, sendBuff, (int)strlen(sendBuff), 0, (const sockaddr*)& server, sizeof(server));
 
-		// Asks the server what's the currnet time.
-		// The send function sends data on a connected socket.
-		// The buffer to be sent and its size are needed.
-		// The fourth argument is an idicator specifying the way in which the call is made (0 for default).
-		// The two last arguments hold the details of the server to communicate with. 
-		// NOTE: the last argument should always be the actual size of the client's data-structure (i.e. sizeof(sockaddr)).
-		bytesSent = sendto(connSocket, sendBuff, (int)strlen(sendBuff), 0, (const sockaddr*)& server, sizeof(server));
+	while (flag) 
+	{
+		
 		if (SOCKET_ERROR == bytesSent)
 		{
 			cout << "Time Client: Error at sendto(): " << WSAGetLastError() << endl;
@@ -73,7 +75,7 @@ int main(int argc, char* argv[])
 			return(-1);
 		}
 
-		cout << "Time Client: Sent: " << bytesSent << "/" << strlen(sendBuff) << " bytes of \"" << sendBuff << "\" message.\n";
+		//cout << "Time Client: Sent: " << bytesSent << "/" << strlen(sendBuff) << " bytes of \"" << sendBuff << "\" message.\n";
 
 		// Gets the server's answer using simple recieve (no need to hold the server's address).
 		bytesRecv = recv(connSocket, recvBuff, 255, 0);
@@ -84,12 +86,10 @@ int main(int argc, char* argv[])
 			WSACleanup();
 			return(-1);
 		}
-	}
 
-
-
-	recvBuff[bytesRecv] = '\0'; //add the null-terminating to make it a string
-	cout << "Time Client: Recieved: " << bytesRecv << " bytes of \"" << recvBuff << "\" message.\n";
+		recvBuff[bytesRecv] = '\0'; //add the null-terminating to make it a string
+		cout << "Time Client: Recieved: " << bytesRecv << " bytes of \"" << recvBuff << "\" message.\n";
+	}		
 
 	// Closing connections and Winsock.
 	cout << "Time Client: Closing Connection.\n";
