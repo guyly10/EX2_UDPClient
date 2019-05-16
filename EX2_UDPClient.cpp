@@ -51,54 +51,88 @@ int main(int argc, char* argv[])
 	int bytesRecv = 0;
 	char sendBuff[255];
 	char recvBuff[255];
+	char command[255];
 	bool flag = true;
-	int count = 0;
+	int numOfFiles = 0;
+	int getCount = 0;
+	char get[] = "GET ";
+	char secondWord[255];
 
-	cout << "Please choose one of the following commands: GETAll--GET--PUT.\n";
+	cout << "Please choose one of the following commands: GETAll--GET*File Name*--PUT*File Name*.\n";
 	cin >> sendBuff;
+	cin >> secondWord;
 
-	// Asks the server what's the currnet time.
-	// The send function sends data on a connected socket.
-	// The buffer to be sent and its size are needed.
-	// The fourth argument is an idicator specifying the way in which the call is made (0 for default).
-	// The two last arguments hold the details of the server to communicate with. 
-	// NOTE: the last argument should always be the actual size of the client's data-structure (i.e. sizeof(sockaddr)).
-	bytesSent = sendto(connSocket, sendBuff, (int)strlen(sendBuff), 0, (const sockaddr*)& server, sizeof(server));
-
-	if (SOCKET_ERROR == bytesSent)
+	if (strcmp(sendBuff, "GETAll") == 0)
 	{
-		cout << "Time Client: Error at sendto(): " << WSAGetLastError() << endl;
-		closesocket(connSocket);
-		WSACleanup();
-		return(-1);
-	}
+		// Asks the server what's the currnet time.
+		// The send function sends data on a connected socket.
+		// The buffer to be sent and its size are needed.
+		// The fourth argument is an idicator specifying the way in which the call is made (0 for default).
+		// The two last arguments hold the details of the server to communicate with. 
+		// NOTE: the last argument should always be the actual size of the client's data-structure (i.e. sizeof(sockaddr)).
+		bytesSent = sendto(connSocket, sendBuff, (int)strlen(sendBuff), 0, (const sockaddr*)& server, sizeof(server));
 
-	//cout << "Time Client: Sent: " << bytesSent << "/" << strlen(sendBuff) << " bytes of \"" << sendBuff << "\" message.\n";
-
-	// Gets the server's answer using simple recieve (no need to hold the server's address).
-	
-	while (bytesRecv = recv(connSocket, recvBuff, 255, 0) > 0)
-	{		
-		if (SOCKET_ERROR == bytesRecv)
+		if (SOCKET_ERROR == bytesSent)
 		{
-			cout << "Time Client: Error at recv(): " << WSAGetLastError() << endl;
+			cout << "Time Client: Error at sendto(): " << WSAGetLastError() << endl;
 			closesocket(connSocket);
 			WSACleanup();
 			return(-1);
-		}	
-		
-		for (int i = 0; i < 255; i++)
+		}
+
+		//cout << "Time Client: Sent: " << bytesSent << "/" << strlen(sendBuff) << " bytes of \"" << sendBuff << "\" message.\n";
+
+		// Gets the server's answer using simple recieve (no need to hold the server's address).
+
+		bytesRecv = recv(connSocket, recvBuff, 255, 0);
+
+		numOfFiles = recvBuff[0];
+
+		for (int i = 0; i < numOfFiles; i++)
 		{
-			if (recvBuff[i] >= 'A' && recvBuff[i] <= 'Z' || recvBuff[i] >= 'a' && recvBuff[i] <= 'z')
+			bytesRecv = recv(connSocket, recvBuff, 255, 0);
+			if (SOCKET_ERROR == bytesRecv)
 			{
-				count++;
+				cout << "Time Client: Error at recv(): " << WSAGetLastError() << endl;
+				closesocket(connSocket);
+				WSACleanup();
+				return(-1);
+			}
+
+			recvBuff[bytesRecv] = '\0'; //add the null-terminating to make it a string
+			cout << "Time Client: Recieved: " << bytesRecv << " bytes of \"" << recvBuff << "\" message.\n";
+		}
+	}
+
+	else 
+	{		
+		for (int i = 0; i < 4; i++)
+		{
+			if (sendBuff[i] == get[i])
+			{
+				getCount++;
 			}
 		}
 
-		recvBuff[count] = '\0'; //add the null-terminating to make it a string
-		cout << "Time Client: Recieved: " << bytesRecv << " bytes of \"" << recvBuff << "\" message.\n";
-		count = 0;
-	}	
+		if (getCount == 3)
+		{
+			// Asks the server what's the currnet time.
+			// The send function sends data on a connected socket.
+			// The buffer to be sent and its size are needed.
+			// The fourth argument is an idicator specifying the way in which the call is made (0 for default).
+			// The two last arguments hold the details of the server to communicate with. 
+			// NOTE: the last argument should always be the actual size of the client's data-structure (i.e. sizeof(sockaddr)).
+			bytesSent = sendto(connSocket, sendBuff, (int)strlen(sendBuff), 0, (const sockaddr*)& server, sizeof(server));
+
+			if (SOCKET_ERROR == bytesSent)
+			{
+				cout << "Time Client: Error at sendto(): " << WSAGetLastError() << endl;
+				closesocket(connSocket);
+				WSACleanup();
+				return(-1);
+			}
+		}
+	}
 
 
 	// Closing connections and Winsock.
