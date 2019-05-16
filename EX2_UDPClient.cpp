@@ -4,7 +4,7 @@ using namespace std;
 #include <winsock2.h> 
 #include <Ws2tcpip.h>
 #include <string.h>
-
+#pragma warning(disable : 4996)
 
 int main(int argc, char* argv[])
 {
@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
 	WSAData wsaData;
 	if (NO_ERROR != WSAStartup(MAKEWORD(2, 2), &wsaData))
 	{
-		cout << "Time Client: Error at WSAStartup()\n";
+		cout << "Client: Error at WSAStartup()\n";
 	}
 
 	// Client side:
@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 	SOCKET connSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (INVALID_SOCKET == connSocket)
 	{
-		cout << "Time Client: Error at socket(): " << WSAGetLastError() << endl;
+		cout << "Client: Error at socket(): " << WSAGetLastError() << endl;
 		WSACleanup();
 		return(-1);
 	}
@@ -58,12 +58,22 @@ int main(int argc, char* argv[])
 	int getCount = 0;
 	char get[] = "GET ";
 	char secondWord[255];
+	int flagCount = 0;
 
 	cout << "Please choose one of the following commands: GETAll--GET*File Name*--PUT*File Name*.\n";
-	cin >> sendBuff >> secondWord;
-	
+	scanf("%[^\n]", sendBuff);
+	//cin >> sendBuff >> secondWord;
 
-	if (strcmp(sendBuff, "GET") == 0 && strcmp(secondWord, "All") == 0)
+	char *token = strtok(sendBuff, " ");
+	
+	while (token != NULL)
+	{
+		flagCount++;
+		strcpy(secondWord, token);
+		token = strtok(NULL, " ");
+	}
+
+	if (strcmp(sendBuff, "GET") == 0 && strcmp(secondWord, "All") == 0 && flagCount < 3)
 	{
 		// Asks the server what's the currnet time.
 		// The send function sends data on a connected socket.
@@ -76,16 +86,13 @@ int main(int argc, char* argv[])
 
 		if (SOCKET_ERROR == bytesSent || SOCKET_ERROR == bytesSent2)
 		{
-			cout << "Time Client: Error at sendto(): " << WSAGetLastError() << endl;
+			cout << "Client: Error at sendto(): " << WSAGetLastError() << endl;
 			closesocket(connSocket);
 			WSACleanup();
 			return(-1);
-		}
-
-		//cout << "Time Client: Sent: " << bytesSent << "/" << strlen(sendBuff) << " bytes of \"" << sendBuff << "\" message.\n";
+		}		
 
 		// Gets the server's answer using simple recieve (no need to hold the server's address).
-
 		bytesRecv = recv(connSocket, recvBuff, 255, 0);
 
 		numOfFiles = recvBuff[0];
@@ -95,7 +102,7 @@ int main(int argc, char* argv[])
 			bytesRecv = recv(connSocket, recvBuff, 255, 0);
 			if (SOCKET_ERROR == bytesRecv)
 			{
-				cout << "Time Client: Error at recv(): " << WSAGetLastError() << endl;
+				cout << "Client: Error at recv(): " << WSAGetLastError() << endl;
 				closesocket(connSocket);
 				WSACleanup();
 				return(-1);
@@ -106,11 +113,11 @@ int main(int argc, char* argv[])
 			{
 				continue;
 			}	
-			cout << "Time Client: Recieved: " << bytesRecv << " bytes of \"" << recvBuff << "\" message.\n";
+			cout << "Client: Recieved: " << recvBuff << ".\n";
 		}
 	}
 
-	else if (strcmp(sendBuff, "GET") == 0)
+	else if (strcmp(sendBuff, "GET") == 0 && flagCount < 3)
 	{
 		// Asks the server what's the currnet time.
 		// The send function sends data on a connected socket.
@@ -123,7 +130,7 @@ int main(int argc, char* argv[])
 
 		if (SOCKET_ERROR == bytesSent)
 		{
-			cout << "Time Client: Error at sendto(): " << WSAGetLastError() << endl;
+			cout << "Client: Error at sendto(): " << WSAGetLastError() << endl;
 			closesocket(connSocket);
 			WSACleanup();
 			return(-1);
@@ -132,17 +139,17 @@ int main(int argc, char* argv[])
 		bytesRecv = recv(connSocket, recvBuff, 255, 0);
 
 		recvBuff[bytesRecv] = '\0'; //add the null-terminating to make it a string
-		cout << "Time Client: Recieved: " << bytesRecv << " bytes of \"" << recvBuff << "\" message.\n";
+		cout << "Client: " << recvBuff << ".\n";
 	}
 	
-	else if (strcmp(sendBuff, "PUT") == 0) 
+	else if (strcmp(sendBuff, "PUT") == 0 && flagCount < 3)
 	{
 		cout << "Not Implemented yet.\n";
 	}
 
 	else
 	{
-		cout << "Unsupported command.\n";
+		cout << "500: Unknown Error.\n";
 	}
 
 
