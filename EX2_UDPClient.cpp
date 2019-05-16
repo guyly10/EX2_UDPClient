@@ -48,6 +48,7 @@ int main(int argc, char* argv[])
 	// Send and receive data.
 
 	int bytesSent = 0;
+	int bytesSent2 = 0;
 	int bytesRecv = 0;
 	char sendBuff[255];
 	char recvBuff[255];
@@ -62,7 +63,7 @@ int main(int argc, char* argv[])
 	cin >> sendBuff;
 	cin >> secondWord;
 
-	if (strcmp(sendBuff, "GETAll") == 0)
+	if (strcmp(sendBuff, "GET") == 0 && strcmp(secondWord, "All") == 0)
 	{
 		// Asks the server what's the currnet time.
 		// The send function sends data on a connected socket.
@@ -71,8 +72,9 @@ int main(int argc, char* argv[])
 		// The two last arguments hold the details of the server to communicate with. 
 		// NOTE: the last argument should always be the actual size of the client's data-structure (i.e. sizeof(sockaddr)).
 		bytesSent = sendto(connSocket, sendBuff, (int)strlen(sendBuff), 0, (const sockaddr*)& server, sizeof(server));
+		bytesSent2 = sendto(connSocket, secondWord, (int)strlen(secondWord), 0, (const sockaddr*)& server, sizeof(server));
 
-		if (SOCKET_ERROR == bytesSent)
+		if (SOCKET_ERROR == bytesSent || SOCKET_ERROR == bytesSent2)
 		{
 			cout << "Time Client: Error at sendto(): " << WSAGetLastError() << endl;
 			closesocket(connSocket);
@@ -105,14 +107,7 @@ int main(int argc, char* argv[])
 	}
 
 	else 
-	{		
-		for (int i = 0; i < 4; i++)
-		{
-			if (sendBuff[i] == get[i])
-			{
-				getCount++;
-			}
-		}
+	{
 
 		if (getCount == 3)
 		{
