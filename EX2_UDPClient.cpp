@@ -60,8 +60,8 @@ int main(int argc, char* argv[])
 	char secondWord[255];
 
 	cout << "Please choose one of the following commands: GETAll--GET*File Name*--PUT*File Name*.\n";
-	cin >> sendBuff;
-	cin >> secondWord;
+	cin >> sendBuff >> secondWord;
+	
 
 	if (strcmp(sendBuff, "GET") == 0 && strcmp(secondWord, "All") == 0)
 	{
@@ -102,35 +102,51 @@ int main(int argc, char* argv[])
 			}
 
 			recvBuff[bytesRecv] = '\0'; //add the null-terminating to make it a string
+			if (strcmp(recvBuff, ".") == 0 || strcmp(recvBuff, "..") == 0)
+			{
+				continue;
+			}	
 			cout << "Time Client: Recieved: " << bytesRecv << " bytes of \"" << recvBuff << "\" message.\n";
 		}
 	}
 
-	else 
+	else if (strcmp(sendBuff, "GET") == 0)
 	{
+		// Asks the server what's the currnet time.
+		// The send function sends data on a connected socket.
+		// The buffer to be sent and its size are needed.
+		// The fourth argument is an idicator specifying the way in which the call is made (0 for default).
+		// The two last arguments hold the details of the server to communicate with. 
+		// NOTE: the last argument should always be the actual size of the client's data-structure (i.e. sizeof(sockaddr)).
+		bytesSent = sendto(connSocket, sendBuff, (int)strlen(sendBuff), 0, (const sockaddr*)& server, sizeof(server));
+		bytesSent2 = sendto(connSocket, secondWord, (int)strlen(secondWord), 0, (const sockaddr*)& server, sizeof(server));
 
-		if (getCount == 3)
+		if (SOCKET_ERROR == bytesSent)
 		{
-			// Asks the server what's the currnet time.
-			// The send function sends data on a connected socket.
-			// The buffer to be sent and its size are needed.
-			// The fourth argument is an idicator specifying the way in which the call is made (0 for default).
-			// The two last arguments hold the details of the server to communicate with. 
-			// NOTE: the last argument should always be the actual size of the client's data-structure (i.e. sizeof(sockaddr)).
-			bytesSent = sendto(connSocket, sendBuff, (int)strlen(sendBuff), 0, (const sockaddr*)& server, sizeof(server));
-
-			if (SOCKET_ERROR == bytesSent)
-			{
-				cout << "Time Client: Error at sendto(): " << WSAGetLastError() << endl;
-				closesocket(connSocket);
-				WSACleanup();
-				return(-1);
-			}
+			cout << "Time Client: Error at sendto(): " << WSAGetLastError() << endl;
+			closesocket(connSocket);
+			WSACleanup();
+			return(-1);
 		}
+
+		bytesRecv = recv(connSocket, recvBuff, 255, 0);
+
+		recvBuff[bytesRecv] = '\0'; //add the null-terminating to make it a string
+		cout << "Time Client: Recieved: " << bytesRecv << " bytes of \"" << recvBuff << "\" message.\n";
+	}
+	
+	else if (strcmp(sendBuff, "PUT") == 0) 
+	{
+		cout << "Not Implemented yet.\n";
+	}
+
+	else
+	{
+		cout << "Unsupported command.\n";
 	}
 
 
 	// Closing connections and Winsock.
-	cout << "Time Client: Closing Connection.\n";
+	cout << "Client: Closing Connection.\n";
 	closesocket(connSocket);
 }
