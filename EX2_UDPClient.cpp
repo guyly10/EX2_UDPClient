@@ -117,18 +117,12 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	else if (strcmp(sendBuff, "GET") == 0 && flagCount < 3)
-	{
-		// Asks the server what's the currnet time.
-		// The send function sends data on a connected socket.
-		// The buffer to be sent and its size are needed.
-		// The fourth argument is an idicator specifying the way in which the call is made (0 for default).
-		// The two last arguments hold the details of the server to communicate with. 
-		// NOTE: the last argument should always be the actual size of the client's data-structure (i.e. sizeof(sockaddr)).
+	else if (flagCount < 3)
+	{		
 		bytesSent = sendto(connSocket, sendBuff, (int)strlen(sendBuff), 0, (const sockaddr*)& server, sizeof(server));
 		bytesSent2 = sendto(connSocket, secondWord, (int)strlen(secondWord), 0, (const sockaddr*)& server, sizeof(server));
 
-		if (SOCKET_ERROR == bytesSent)
+		if (SOCKET_ERROR == bytesSent || bytesSent2 == SOCKET_ERROR)
 		{
 			cout << "Client: Error at sendto(): " << WSAGetLastError() << endl;
 			closesocket(connSocket);
@@ -137,21 +131,45 @@ int main(int argc, char* argv[])
 		}
 
 		bytesRecv = recv(connSocket, recvBuff, 255, 0);
+		if (SOCKET_ERROR == bytesRecv)
+		{
+			cout << "Client: Error at recv(): " << WSAGetLastError() << endl;
+			closesocket(connSocket);
+			WSACleanup();
+			return(-1);
+		}
 
 		recvBuff[bytesRecv] = '\0'; //add the null-terminating to make it a string
 		cout << "Client: " << recvBuff << ".\n";
 	}
 	
-	else if (strcmp(sendBuff, "PUT") == 0 && flagCount < 3)
-	{
-		cout << "Not Implemented yet.\n";
-	}
-
 	else
 	{
-		cout << "500: Unknown Error.\n";
-	}
+		strcpy_s(sendBuff, "Error");
+		strcpy_s(secondWord, "Error");
+		bytesSent = sendto(connSocket, sendBuff, (int)strlen(sendBuff), 0, (const sockaddr*)& server, sizeof(server));
+		bytesSent2 = sendto(connSocket, secondWord, (int)strlen(secondWord), 0, (const sockaddr*)& server, sizeof(server));
 
+		if (SOCKET_ERROR == bytesSent || bytesSent2 == SOCKET_ERROR)
+		{
+			cout << "Client: Error at sendto(): " << WSAGetLastError() << endl;
+			closesocket(connSocket);
+			WSACleanup();
+			return(-1);
+		}
+
+		bytesRecv = recv(connSocket, recvBuff, 255, 0);
+		if (SOCKET_ERROR == bytesRecv)
+		{
+			cout << "Client: Error at recv(): " << WSAGetLastError() << endl;
+			closesocket(connSocket);
+			WSACleanup();
+			return(-1);
+		}
+
+		recvBuff[bytesRecv] = '\0'; //add the null-terminating to make it a string
+		cout << "Client: " << recvBuff << ".\n";
+	}
 
 	// Closing connections and Winsock.
 	cout << "Client: Closing Connection.\n";
