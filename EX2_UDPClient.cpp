@@ -51,19 +51,17 @@ int main(int argc, char* argv[])
 	int bytesSent2 = 0;
 	int bytesRecv = 0;
 	char sendBuff[255];
-	char recvBuff[255];
-	char command[255];
-	bool flag = true;
-	int numOfFiles = 0;
-	int getCount = 0;
-	char get[] = "GET ";
+	char recvBuff[255];		
+	int numOfFiles = 0;	
 	char secondWord[255];
 	int flagCount = 0;
 
 	cout << "Please choose one of the following commands: GETAll--GET*File Name*--PUT*File Name*.\n";
+	//allows to scanf input with spaces from the user
 	scanf("%[^\n]", sendBuff);
-	//cin >> sendBuff >> secondWord;
+	
 
+	//splits the string into separate words. divided by space
 	char *token = strtok(sendBuff, " ");
 	
 	while (token != NULL)
@@ -74,13 +72,7 @@ int main(int argc, char* argv[])
 	}
 
 	if (strcmp(sendBuff, "GET") == 0 && strcmp(secondWord, "All") == 0 && flagCount < 3)
-	{
-		// Asks the server what's the currnet time.
-		// The send function sends data on a connected socket.
-		// The buffer to be sent and its size are needed.
-		// The fourth argument is an idicator specifying the way in which the call is made (0 for default).
-		// The two last arguments hold the details of the server to communicate with. 
-		// NOTE: the last argument should always be the actual size of the client's data-structure (i.e. sizeof(sockaddr)).
+	{		
 		bytesSent = sendto(connSocket, sendBuff, (int)strlen(sendBuff), 0, (const sockaddr*)& server, sizeof(server));
 		bytesSent2 = sendto(connSocket, secondWord, (int)strlen(secondWord), 0, (const sockaddr*)& server, sizeof(server));
 
@@ -97,6 +89,7 @@ int main(int argc, char* argv[])
 
 		numOfFiles = recvBuff[0];
 
+		//in the for loop we know how many files we are going to receive from the server
 		for (int i = 0; i < numOfFiles; i++)
 		{
 			bytesRecv = recv(connSocket, recvBuff, 255, 0);
@@ -117,6 +110,7 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	//a command which is consisted from less than 2 words and is not GET All is sent to the server
 	else if (flagCount < 3)
 	{		
 		bytesSent = sendto(connSocket, sendBuff, (int)strlen(sendBuff), 0, (const sockaddr*)& server, sizeof(server));
@@ -143,6 +137,7 @@ int main(int argc, char* argv[])
 		cout << "Client: " << recvBuff << ".\n";
 	}
 	
+	//commands which are more than 3 words are unknown commands
 	else
 	{
 		strcpy_s(sendBuff, "Error");
