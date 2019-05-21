@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
 	char secondWord[255];
 	int flagCount = 0;
 
-	cout << "Please choose one of the following commands: GETAll--GET*File Name*--PUT*File Name*.\n";
+	cout << "Please choose one of the following commands: GET All--GET*File Name*--PUT*File Name*--Space to Close Server Connections.\n";
 	//allows to scanf input with spaces from the user
 	scanf("%[^\n]", sendBuff);
 	
